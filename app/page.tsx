@@ -26,6 +26,15 @@ const steps = [
   ["4", "Go live with confidence", "Follow our simple setup guidance and we’ll help get your site online."],
 ];
 
+function LogoMark() {
+  return <svg className="logo-mark" viewBox="0 0 92 72" role="img" aria-label="HSW road network logo">
+    <path d="M11 10v52M11 36h22M33 10v52M33 18h26c9 0 9 15 0 15H46c-10 0-10 16 0 16h13c9 0 9 13 0 13H33M59 48l8 14 8-25 7 25" fill="none" stroke="currentColor" strokeWidth="9" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="M11 24v7M43 18h8M68 50l3-9" fill="none" stroke="#f6f0e4" strokeWidth="2.4" strokeLinecap="round"/>
+    <circle cx="82" cy="28" r="6" fill="#df704e"/>
+    <circle cx="64" cy="9" r="2.6" fill="#df704e"/><circle cx="73" cy="9" r="2.6" fill="#efac35"/><circle cx="82" cy="9" r="2.6" fill="currentColor"/>
+  </svg>;
+}
+
 export default function Home() {
   const [sent, setSent] = useState(false);
 
@@ -40,7 +49,7 @@ export default function Home() {
 
   return <main>
     <header className="nav-wrap"><nav className="nav shell" aria-label="Main navigation">
-      <a className="brand" href="#top"><span className="brand-mark">HS</span><span>High Street<br/>Web Co.</span></a>
+      <a className="brand" href="#top"><LogoMark/><span>High Street<br/>Web Co.</span></a>
       <div className="nav-links"><a href="#services">What we build</a><a href="#process">How it works</a><a href="#about">Why us</a></div>
       <a className="button button-small" href="#enquire">Start a project <span>↗</span></a>
     </nav></header>
@@ -84,6 +93,6 @@ export default function Home() {
       </form>
     </div></section>
 
-    <footer><div className="shell footer-grid"><div className="brand footer-brand"><span className="brand-mark">HS</span><span>High Street<br/>Web Co.</span></div><p>Websites built for local business.</p><a href="mailto:highstreetwebcompany@gmail.com">highstreetwebcompany@gmail.com</a></div><div className="shell footer-bottom"><span>© {new Date().getFullYear()} High Street Web Co.</span><span>Supporting small businesses, one website at a time.</span></div></footer>
+    <footer><div className="shell footer-grid"><div className="brand footer-brand"><LogoMark/><span>High Street<br/>Web Co.</span></div><p>Websites built for local business.</p><a href="mailto:highstreetwebcompany@gmail.com">highstreetwebcompany@gmail.com</a></div><div className="shell footer-bottom"><span>© {new Date().getFullYear()} High Street Web Co.</span><span>Supporting small businesses, one website at a time.</span></div></footer>
   </main>;
 }

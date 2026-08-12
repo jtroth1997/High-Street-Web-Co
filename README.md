@@ -6,7 +6,7 @@ High Street Web Co. creates smart, professional websites for small and local bus
 
 ## View the website
 
-### [Open the live High Street Web Co. website](https://high-street-web-co.jackmoycetroth.chatgpt.site)
+### [Open the live High Street Web Co. website](https://jtroth1997.github.io/High-Street-Web-Co/)
 
 > GitHub displays this README on the repository homepage. The working website is available through the live-site link above.
 

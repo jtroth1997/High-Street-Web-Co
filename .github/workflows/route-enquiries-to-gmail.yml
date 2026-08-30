@@ -1,0 +1,103 @@
+name: Route enquiries to Gmail
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/route-enquiries-to-gmail.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  update-forms:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Route forms to High Street Web Co Gmail
+        shell: bash
+        run: |
+          python3 <<'PY'
+          from pathlib import Path
+          import re
+
+          OLD = 'https://script.google.com/macros/s/AKfycbyRNOSblu9uoEQr3lAPBP4xpCZ-0LFfcH7PsV3xW_GM7EqT-ZYKiB7jHtWYk4nQ9n5JhQ/exec'
+          NEW = 'https://formsubmit.co/highstreetwebcompany@gmail.com'
+
+          # Main website enquiry form
+          p = Path('index.html')
+          s = p.read_text()
+          s = s.replace(f'action="{OLD}"', f'action="{NEW}"')
+          main_marker = 'method="POST"><div aria-hidden="true"'
+          main_hidden = ('method="POST">'
+              '<input type="hidden" name="_subject" value="New High Street Web Co website enquiry">'
+              '<input type="hidden" name="_template" value="table">'
+              '<input type="hidden" name="_next" value="https://highstreetwebco.co.uk/thank-you.html">'
+              '<input type="hidden" name="_url" value="https://highstreetwebco.co.uk/#enquire">'
+              '<div aria-hidden="true"')
+          if main_marker in s:
+              s = s.replace(main_marker, main_hidden, 1)
+          s = re.sub(r'<script>const enquiryForm=document\.getElementById\("enquiry-form"\);.*?</script>', '', s, flags=re.S)
+          p.write_text(s)
+
+          # Tilers Community build brief
+          p = Path('tilers-community.html')
+          s = p.read_text()
+          s = s.replace(f'action="{OLD}"', f'action="{NEW}"')
+          tc_marker = 'method="POST" enctype="multipart/form-data">'
+          tc_hidden = (tc_marker
+              + '<input type="hidden" name="_subject" id="email-subject" value="New Tilers Community website brief">'
+              + '<input type="hidden" name="_template" value="table">'
+              + '<input type="hidden" name="_next" id="next-url" value="https://highstreetwebco.co.uk/tilers-community-thank-you.html">'
+              + '<input type="hidden" name="_url" value="https://highstreetwebco.co.uk/tilers-community.html">')
+          if tc_marker in s and 'id="email-subject"' not in s:
+              s = s.replace(tc_marker, tc_hidden, 1)
+
+          new_handler = '''tcForm.addEventListener("submit",event=>{event.preventDefault();if(sessionStorage.getItem("tcOfferUnlocked")!=="yes"){gateMessage.textContent="Please verify your referral code before submitting.";gateMessage.classList.add("error");document.getElementById("access").scrollIntoView({behavior:"smooth"});return;}if(!tcForm.reportValidity())return;const file=logo.files?.[0];if(!file){logoStatus.textContent="Please upload your logo before submitting.";logoStatus.classList.add("error");logo.scrollIntoView({behavior:"smooth",block:"center"});return;}const ref=makeReference();projectReference.value=ref;document.getElementById("email-subject").value=`New Tilers Community website brief — ${ref}`;document.getElementById("next-url").value=`https://highstreetwebco.co.uk/tilers-community-thank-you.html?ref=${encodeURIComponent(ref)}`;refPreview.textContent=`Your project reference will be: ${ref}`;refPreview.classList.add("show");submitButton.disabled=true;submitButton.textContent="Submitting your brief…";submitNote.textContent="Sending your website brief to High Street Web Co…";sessionStorage.setItem("tcProjectReference",ref);setTimeout(()=>tcForm.submit(),120);});'''
+          s = re.sub(r'tcForm\.addEventListener\("submit",async event=>\{.*?\}\);\n</script>', new_handler + '\n</script>', s, flags=re.S)
+          p.write_text(s)
+
+          # Safety checks
+          for f in ('index.html','tilers-community.html'):
+              text = Path(f).read_text()
+              if OLD in text:
+                  raise SystemExit(f'Old Apps Script endpoint still present in {f}')
+              if NEW not in text:
+                  raise SystemExit(f'Gmail forwarding endpoint missing from {f}')
+          PY
+
+      - name: Commit website form changes
+        shell: bash
+        run: |
+          if git diff --quiet -- index.html tilers-community.html; then
+            echo "No form changes needed"
+          else
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add index.html tilers-community.html
+            git commit -m "Send all website enquiries to Gmail"
+            git push origin main
+          fi
+
+      - name: Trigger email forwarding activation
+        shell: bash
+        run: |
+          curl -sS -X POST \
+            -H 'Referer: https://highstreetwebco.co.uk/' \
+            -H 'Origin: https://highstreetwebco.co.uk' \
+            -F 'name=High Street Web Co setup test' \
+            -F 'email=highstreetwebcompany@gmail.com' \
+            -F 'message=Activation test for website enquiry forwarding.' \
+            -F '_subject=Activate High Street Web Co website enquiries' \
+            'https://formsubmit.co/highstreetwebcompany@gmail.com' >/dev/null || true
+          curl -sS -X POST \
+            -H 'Referer: https://highstreetwebco.co.uk/tilers-community.html' \
+            -H 'Origin: https://highstreetwebco.co.uk' \
+            -F 'name=Tilers Community setup test' \
+            -F 'email=highstreetwebcompany@gmail.com' \
+            -F 'message=Activation test for Tilers Community website brief forwarding.' \
+            -F '_subject=Activate Tilers Community website enquiries' \
+            'https://formsubmit.co/highstreetwebcompany@gmail.com' >/dev/null || true

@@ -1,0 +1,42 @@
+name: Activate enquiry email
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/activate-enquiry-email.yml'
+
+jobs:
+  activate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Request FormSubmit activation
+        shell: bash
+        run: |
+          set +e
+          echo 'Trying AJAX activation...'
+          curl -sS -L \
+            -A 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 Chrome/126 Safari/537.36' \
+            -H 'Origin: https://highstreetwebco.co.uk' \
+            -H 'Referer: https://highstreetwebco.co.uk/' \
+            -H 'Content-Type: application/json' \
+            -H 'Accept: application/json' \
+            -d '{"name":"High Street Web Co setup","email":"highstreetwebcompany@gmail.com","message":"Please activate forwarding for enquiries from highstreetwebco.co.uk","_subject":"High Street Web Co enquiry forwarding activation"}' \
+            'https://formsubmit.co/ajax/highstreetwebcompany@gmail.com' \
+            -o /tmp/ajax-response.txt -w '\nHTTP_STATUS:%{http_code}\n'
+          echo 'AJAX response:'
+          cat /tmp/ajax-response.txt || true
+          echo
+          echo 'Trying standard activation...'
+          curl -sS -L \
+            -A 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 Chrome/126 Safari/537.36' \
+            -H 'Origin: https://highstreetwebco.co.uk' \
+            -H 'Referer: https://highstreetwebco.co.uk/' \
+            --data-urlencode 'name=High Street Web Co setup' \
+            --data-urlencode 'email=highstreetwebcompany@gmail.com' \
+            --data-urlencode 'message=Please activate forwarding for enquiries from highstreetwebco.co.uk' \
+            --data-urlencode '_subject=High Street Web Co enquiry forwarding activation' \
+            'https://formsubmit.co/highstreetwebcompany@gmail.com' \
+            -o /tmp/standard-response.txt -w '\nHTTP_STATUS:%{http_code}\n'
+          echo 'Standard response title/text markers:'
+          grep -Eio '<title>[^<]+|activation|activate|confirm|success|error' /tmp/standard-response.txt | head -40 || true
